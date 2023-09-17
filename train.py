@@ -15,7 +15,7 @@ import torch.optim as optim
 from utility import Datasets
 from models.CrossCBR import CrossCBR
 
-
+devices = torch.device("cuda")
 def get_cmd():
     parser = argparse.ArgumentParser()
     # experimental settings
@@ -283,27 +283,27 @@ def get_recall(pred, grd, is_hit, topk):
 
 def get_ndcg(pred, grd, is_hit, topk):
     def DCG(hit, topk, device):
-        hit = hit/torch.log2(torch.arange(2, topk+2, device=device, dtype=torch.float))
+        hit = hit/torch.log2(torch.arange(2, topk+2, device=devices, dtype=torch.float))
         return hit.sum(-1)
 
     def IDCG(num_pos, topk, device):
         hit = torch.zeros(topk, dtype=torch.float)
         hit[:num_pos] = 1
-        return DCG(hit, topk, device)
+        return DCG(hit, topk, devices)
 
-    device = grd.device
-    pred = pred.to(device)
-    is_hit = is_hit.to(device)
+    device = grd.devices
+    pred = pred.to(devices)
+    is_hit = is_hit.to(devices)
     IDCGs = torch.empty(1+topk, dtype=torch.float)
     IDCGs[0] = 1  # avoid 0/0
     for i in range(1, topk+1):
-        IDCGs[i] = IDCG(i, topk, device)
+        IDCGs[i] = IDCG(i, topk, devices)
 
     num_pos = grd.sum(dim=1).clamp(0, topk).to(torch.long)
-    dcg = DCG(is_hit, topk, device)
+    dcg = DCG(is_hit, topk, devices)
 
     idcg = IDCGs[num_pos]
-    ndcg = dcg/idcg.to(device)
+    ndcg = dcg/idcg.to(devices)
 
     denorm = pred.shape[0] - (num_pos == 0).sum().item()
     nomina = ndcg.sum().item()
