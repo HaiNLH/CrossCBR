@@ -283,15 +283,17 @@ def get_recall(pred, grd, is_hit, topk):
 
 def get_ndcg(pred, grd, is_hit, topk):
     def DCG(hit, topk, device):
-        hit = hit/torch.log2(torch.arange(2, topk+2, device=pred.device, dtype=torch.float))
+        hit = hit/torch.log2(torch.arange(2, topk+2, device=device, dtype=torch.float))
         return hit.sum(-1)
 
     def IDCG(num_pos, topk, device):
         hit = torch.zeros(topk, dtype=torch.float)
         hit[:num_pos] = 1
-        return DCG(hit, topk, pred.device)
+        return DCG(hit, topk, device)
 
     device = grd.device
+    pred = pred.to(device)
+    is_hit = is_hit.to(device)
     IDCGs = torch.empty(1+topk, dtype=torch.float)
     IDCGs[0] = 1  # avoid 0/0
     for i in range(1, topk+1):
