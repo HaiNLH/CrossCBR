@@ -255,7 +255,7 @@ def get_metrics(metrics, grd, pred, topks):
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
         row_indice = torch.zeros_like(col_indice, device=pred.device) + torch.arange(pred.shape[0], device=pred.device, dtype=torch.long).view(-1, 1)
-        
+        grd = grd.to(device)
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
 
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
