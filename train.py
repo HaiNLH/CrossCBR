@@ -294,7 +294,7 @@ def get_ndcg(pred, grd, is_hit, topk):
     device = pred.device
     # pred = pred.to(devices)
     # is_hit = is_hit.to(devices)
-    IDCGs = torch.empty(1+topk, dtype=torch.float)
+    IDCGs = torch.empty(1+topk, dtype=torch.float, device = device)
     IDCGs[0] = 1  # avoid 0/0
     for i in range(1, topk+1):
         IDCGs[i] = IDCG(i, topk, device)
