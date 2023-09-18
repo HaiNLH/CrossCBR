@@ -291,7 +291,7 @@ def get_ndcg(pred, grd, is_hit, topk):
         hit[:num_pos] = 1
         return DCG(hit, topk, device)
 
-    device = grd.device
+    device = pred.device
     # pred = pred.to(devices)
     # is_hit = is_hit.to(devices)
     IDCGs = torch.empty(1+topk, dtype=torch.float)
