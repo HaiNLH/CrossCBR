@@ -547,22 +547,22 @@ class CrossCBR(nn.Module):
                 for i in range(0, n_factors_l):
                     
                     A_factor_embeddings = torch_sparse.spmm(D_indices_row, D_row_factors[i], A_inshape[1], A_inshape[1],
-                                                            ego_layer_B_embeddings[i])
+                                                            ego_layer_B_embeddings[i], device ='cuda')
                     A_factor_embeddings = torch_sparse.spmm(A_indices, A_factors[i], A_inshape[0], A_inshape[1],
-                                                            A_factor_embeddings)  # torch.sparse.mm(A_factors[i], factor_embeddings)
+                                                            A_factor_embeddings, device ='cuda')  # torch.sparse.mm(A_factors[i], factor_embeddings)
 
                     A_factor_embeddings = torch_sparse.spmm(D_indices_col, D_col_factors[i], A_inshape[0], A_inshape[0],
-                                                            A_factor_embeddings)
+                                                            A_factor_embeddings, device ='cuda')
                     A_iter_embedding = ego_layer_A_embeddings[i] + A_factor_embeddings
 
                     B_factor_embeddings = torch_sparse.spmm(D_indices_col, D_col_factors[i], A_inshape[0], A_inshape[0],
-                                                            ego_layer_A_embeddings[i])
+                                                            ego_layer_A_embeddings[i], device ='cuda')
                     B_factor_embeddings = torch_sparse.spmm(A_indices[[1, 0]], A_factors_t[i], A_inshape[1],
                                                             A_inshape[0],
-                                                            B_factor_embeddings)  # torch.sparse.mm(A_factors[i], factor_embeddings)
+                                                            B_factor_embeddings, device ='cuda')  # torch.sparse.mm(A_factors[i], factor_embeddings)
 
                     B_factor_embeddings = torch_sparse.spmm(D_indices_row, D_row_factors[i], A_inshape[1], A_inshape[1],
-                                                            B_factor_embeddings)
+                                                            B_factor_embeddings, device ='cuda')
                     B_iter_embedding = ego_layer_B_embeddings[i] + B_factor_embeddings
                     # A_iter_embedding,B_iter_embedding=torch.split(factor_embeddings, [numA, numB], 0)
                     A_iter_embeddings.append(A_iter_embedding)
