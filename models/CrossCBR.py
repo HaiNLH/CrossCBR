@@ -417,8 +417,12 @@ class CrossCBR(nn.Module):
 
         non_atom_users_feature, non_atom_bundles_feature = self.ub_propagate(
             self.non_atom_graph, atom_user_feature, atom_bundles_feature)
-        users_feature = [atom_user_feature, non_atom_users_feature]
-        bundles_feature = [atom_bundles_feature, non_atom_bundles_feature]
+        if test:
+            users_feature = [IL_users_feature, BL_users_feature]
+            bundles_feature = [IL_bundles_feature, BL_bundles_feature]
+        else:
+            users_feature = [atom_user_feature, non_atom_users_feature]
+            bundles_feature = [atom_bundles_feature, non_atom_bundles_feature]
 
         return users_feature, bundles_feature
 
