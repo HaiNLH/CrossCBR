@@ -383,6 +383,15 @@ class CrossCBR(nn.Module):
         #  =============================  item level propagation  =============================
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
+            atom_bundles_feature, atom_item_feature, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
+                                                                                                     self.bi_graph_t,
+                                                                                                     self.bundles_feature,
+                                                                                                     self.items_feature,
+                                                                                                     self.num_bundles,
+                                                                                                     self.num_items,
+                                                                                                     self.bi_graph_shape,
+                                                                                                     n_factors=1,
+                                                                                                     pick_=False)
         else:
             atom_bundles_feature, atom_item_feature, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
                                                                                                      self.bi_graph_t,
@@ -396,7 +405,7 @@ class CrossCBR(nn.Module):
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
-        IL_bundles_feature = self.get_IL_bundle_rep(atom_bundles_feature, test)
+        IL_bundles_feature = self.get_IL_bundle_rep(atom_item_feature, test)
 
         #  ============================= bundle level propagation =============================
         if test:
