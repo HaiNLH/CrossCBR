@@ -87,16 +87,16 @@ class Info(object):
 
     def get_csv_line(self):
         return self.get_line().replace('\t', ', ')
-class CrossCBR_Info(Info):
-    def __init__(self, embedding_size, embed_L2_norm, mess_dropout, node_dropout, num_layers, act=nn.LeakyReLU()):
-        super().__init__(embedding_size, embed_L2_norm)
-        self.act = act
-        assert 1 > mess_dropout >= 0
-        self.mess_dropout = mess_dropout
-        assert 1 > node_dropout >= 0
-        self.node_dropout = node_dropout
-        assert isinstance(num_layers, int) and num_layers > 0
-        self.num_layers = num_layers
+# class CrossCBR_Info(Info):
+#     def __init__(self, embedding_size, embed_L2_norm, mess_dropout, node_dropout, num_layers, act=nn.LeakyReLU()):
+#         super().__init__(embedding_size, embed_L2_norm)
+#         self.act = act
+#         assert 1 > mess_dropout >= 0
+#         self.mess_dropout = mess_dropout
+#         assert 1 > node_dropout >= 0
+#         self.node_dropout = node_dropout
+#         assert isinstance(num_layers, int) and num_layers > 0
+#         self.num_layers = num_layers
 
 class CrossCBR(nn.Module):
     def get_infotype(self):
@@ -547,22 +547,22 @@ class CrossCBR(nn.Module):
                 for i in range(0, n_factors_l):
                     
                     A_factor_embeddings = torch_sparse.spmm(D_indices_row, D_row_factors[i], A_inshape[1], A_inshape[1],
-                                                            ego_layer_B_embeddings[i]).to('cuda')
+                                                            ego_layer_B_embeddings[i]).to(self.device)
                     A_factor_embeddings = torch_sparse.spmm(A_indices, A_factors[i], A_inshape[0], A_inshape[1],
-                                                            A_factor_embeddings).to('cuda')  # torch.sparse.mm(A_factors[i], factor_embeddings)
+                                                            A_factor_embeddings).to(self.device)  # torch.sparse.mm(A_factors[i], factor_embeddings)
 
                     A_factor_embeddings = torch_sparse.spmm(D_indices_col, D_col_factors[i], A_inshape[0], A_inshape[0],
-                                                            A_factor_embeddings).to('cuda')
+                                                            A_factor_embeddings).to(self.device)
                     A_iter_embedding = ego_layer_A_embeddings[i] + A_factor_embeddings
 
                     B_factor_embeddings = torch_sparse.spmm(D_indices_col, D_col_factors[i], A_inshape[0], A_inshape[0],
-                                                            ego_layer_A_embeddings[i]).to('cuda')
+                                                            ego_layer_A_embeddings[i]).to(self.device)
                     B_factor_embeddings = torch_sparse.spmm(A_indices[[1, 0]], A_factors_t[i], A_inshape[1],
                                                             A_inshape[0],
-                                                            B_factor_embeddings).to('cuda')  # torch.sparse.mm(A_factors[i], factor_embeddings)
+                                                            B_factor_embeddings).to(self.device)  # torch.sparse.mm(A_factors[i], factor_embeddings)
 
                     B_factor_embeddings = torch_sparse.spmm(D_indices_row, D_row_factors[i], A_inshape[1], A_inshape[1],
-                                                            B_factor_embeddings).to('cuda')
+                                                            B_factor_embeddings).to(self.device)
                     B_iter_embedding = ego_layer_B_embeddings[i] + B_factor_embeddings
                     # A_iter_embedding,B_iter_embedding=torch.split(factor_embeddings, [numA, numB], 0)
                     A_iter_embeddings.append(A_iter_embedding)
