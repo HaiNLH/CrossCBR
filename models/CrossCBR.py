@@ -362,22 +362,22 @@ class CrossCBR(nn.Module):
             IL_bundles_feature = self.bundle_agg_dropout(IL_bundles_feature)
 
         return IL_bundles_feature
-    def ub_propagate(self, graph, A_feature, B_feature):
-        # node dropout on graph
-        # indices = graph._indices()
-        # values = graph._values()
-        # values = self.node_dropout(values)
-        # graph = torch.sparse.FloatTensor(
-        #     indices, values, size=graph.shape)
+    # def ub_propagate(self, graph, A_feature, B_feature):
+    #     # node dropout on graph
+    #     # indices = graph._indices()
+    #     # values = graph._values()
+    #     # values = self.node_dropout(values)
+    #     # graph = torch.sparse.FloatTensor(
+    #     #     indices, values, size=graph.shape)
 
-        # propagate
-        features = torch.cat((A_feature, B_feature), 0)
+    #     # propagate
+    #     features = torch.cat((A_feature, B_feature), 0)
 
-        all_features = torch.matmul(graph, features)
-        # all_features=torch.mean(all_features,dim=1,keepdims=False)
-        A_feature, B_feature = torch.split(
-            all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
-        return A_feature, B_feature
+    #     all_features = torch.matmul(graph, features)
+    #     # all_features=torch.mean(all_features,dim=1,keepdims=False)
+    #     A_feature, B_feature = torch.split(
+    #         all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
+    #     return A_feature, B_feature
 
     def propagate(self, test=False):
         #  =============================  item level propagation  =============================
@@ -396,7 +396,7 @@ class CrossCBR(nn.Module):
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
-        IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
+        IL_bundles_feature = self.get_IL_bundle_rep(atom_bundles_feature, test)
 
         #  ============================= bundle level propagation =============================
         if test:
@@ -415,14 +415,14 @@ class CrossCBR(nn.Module):
         ui_avalues_e_list = []
         ui_avalues_list = []
 
-        non_atom_users_feature, non_atom_bundles_feature = self.ub_propagate(
-            self.non_atom_graph, atom_user_feature, atom_bundles_feature)
+        # non_atom_users_feature, non_atom_bundles_feature = self.ub_propagate(
+        #     self.non_atom_graph, atom_user_feature, atom_bundles_feature)
         if test:
             users_feature = [IL_users_feature, BL_users_feature]
             bundles_feature = [IL_bundles_feature, BL_bundles_feature]
         else:
-            users_feature = [atom_user_feature, non_atom_users_feature]
-            bundles_feature = [atom_bundles_feature, non_atom_bundles_feature]
+            users_feature = [atom_user_feature, BL_users_feature]
+            bundles_feature = [IL_bundles_feature, BL_bundles_feature]
 
         return users_feature, bundles_feature
 
