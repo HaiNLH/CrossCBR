@@ -383,7 +383,7 @@ class CrossCBR(nn.Module):
         #  =============================  item level propagation  =============================
         if test:
             #IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
-            atom_bundles_feature, atom_item_feature, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
+            atom_bundles_feature, atom_item_feature_bundle, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
                                                                                                      self.bi_graph_t,
                                                                                                      self.bundles_feature,
                                                                                                      self.items_feature,
@@ -392,6 +392,15 @@ class CrossCBR(nn.Module):
                                                                                                      self.bi_graph_shape,
                                                                                                      n_factors=1,
                                                                                                      pick_=False)
+            atom_user_feature, atom_item_feature_user, self.ui_avalues = self._create_star_routing_embed_with_p(self.ui_graph_h,
+                                                                                                   self.ui_graph_t,
+                                                                                                   self.users_feature,
+                                                                                                   self.items_feature,
+                                                                                                   self.num_users,
+                                                                                                   self.num_items,
+                                                                                                   self.ui_graph_shape,
+                                                                                                   n_factors=self.n_factors,
+                                                                                                   pick_=False)
         else:
             atom_bundles_feature, atom_item_feature_bundle, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
                                                                                                      self.bi_graph_t,
@@ -405,7 +414,7 @@ class CrossCBR(nn.Module):
             #IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
-        IL_bundles_feature = self.get_IL_bundle_rep(atom_item_feature, test)
+        IL_bundles_feature = self.get_IL_bundle_rep(atom_item_feature_bundle, test)
 
         #  ============================= bundle level propagation =============================
         if test:
