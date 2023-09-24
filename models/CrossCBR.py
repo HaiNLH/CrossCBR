@@ -379,10 +379,10 @@ class CrossCBR(nn.Module):
     #         all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
     #     return A_feature, B_feature
 
-    def propagate(self, test=False):
+    def propagate(self, test=False):  #Cần xem lại logic đoạn này vì trong MIDGN chia U-I và B-I và 2 phần này đều là item view trong Cross CBR - trong CrossCBR có thêm phần bundle view U-B
         #  =============================  item level propagation  =============================
         if test:
-            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
+            #IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
             atom_bundles_feature, atom_item_feature, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
                                                                                                      self.bi_graph_t,
                                                                                                      self.bundles_feature,
@@ -393,7 +393,7 @@ class CrossCBR(nn.Module):
                                                                                                      n_factors=1,
                                                                                                      pick_=False)
         else:
-            atom_bundles_feature, atom_item_feature, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
+            atom_bundles_feature, atom_item_feature_bundle, self.bi_avalues = self._create_star_routing_embed_with_p(self.bi_graph_h,
                                                                                                      self.bi_graph_t,
                                                                                                      self.bundles_feature,
                                                                                                      self.items_feature,
@@ -402,7 +402,7 @@ class CrossCBR(nn.Module):
                                                                                                      self.bi_graph_shape,
                                                                                                      n_factors=1,
                                                                                                      pick_=False)
-            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
+            #IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(atom_item_feature, test)
@@ -411,7 +411,7 @@ class CrossCBR(nn.Module):
         if test:
             BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test)
         else:
-            atom_user_feature, atom_item_feature2, self.ui_avalues = self._create_star_routing_embed_with_p(self.ui_graph_h,
+            atom_user_feature, atom_item_feature_user, self.ui_avalues = self._create_star_routing_embed_with_p(self.ui_graph_h,
                                                                                                    self.ui_graph_t,
                                                                                                    self.users_feature,
                                                                                                    self.items_feature,
@@ -427,7 +427,7 @@ class CrossCBR(nn.Module):
         # non_atom_users_feature, non_atom_bundles_feature = self.ub_propagate(
         #     self.non_atom_graph, atom_user_feature, atom_bundles_feature)
         if test:
-            users_feature = [IL_users_feature, BL_users_feature]
+            users_feature = [atom_user_feature, BL_users_feature]
             bundles_feature = [IL_bundles_feature, BL_bundles_feature]
         else:
             users_feature = [atom_user_feature, BL_users_feature]
