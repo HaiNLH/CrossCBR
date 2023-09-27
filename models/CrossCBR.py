@@ -587,22 +587,22 @@ class CrossCBR(nn.Module):
                     B_iter_embeddings.append(B_iter_embedding)
 
                     if t == n_iterations_l - 1:
-                        A_layer_embeddings = A_iter_embeddings
-                        B_layer_embeddings = B_iter_embeddings
+                        A_layer_embeddings = A_iter_embeddings.to(self.device)
+                        B_layer_embeddings = B_iter_embeddings.to(self.device)
                         # get the factor-wise embeddings
                     # .... head_factor_embeddings is a dense tensor with the size of [all_h_list, embed_size/n_factors]
                     # .... analogous to tail_factor_embeddings
-                    head_factor_embedings = A_iter_embedding[all_h_list]
-                    tail_factor_embedings = ego_layer_B_embeddings[i][all_t_list]
+                    head_factor_embedings = A_iter_embedding[all_h_list].to(self.device)
+                    tail_factor_embedings = ego_layer_B_embeddings[i][all_t_list].to(self.device)
 
                     # .... constrain the vector length
                     # .... make the following attentive weights within the range of (0,1)
-                    head_factor_embedings = F.normalize(head_factor_embedings, dim=1)
-                    tail_factor_embedings = F.normalize(tail_factor_embedings, dim=1)
+                    head_factor_embedings = F.normalize(head_factor_embedings, dim=1).to(self.device)
+                    tail_factor_embedings = F.normalize(tail_factor_embedings, dim=1).to(self.device)
 
                     # get the attentive weights
                     # .... A_factor_values is a dense tensor with the size of [all_h_list,1]
-                    A_factor_values = torch.sum(torch.mul(head_factor_embedings, F.tanh(tail_factor_embedings)), axis=1)
+                    A_factor_values = torch.sum(torch.mul(head_factor_embedings, F.tanh(tail_factor_embedings)), axis=1).to(self.device)
 
                     # update the attentive weights
                     A_iter_values.append(A_factor_values)
@@ -628,7 +628,7 @@ class CrossCBR(nn.Module):
         all_B_embeddings = torch.stack(all_B_embeddings, 1)
         all_B_embeddings = torch.mean(all_B_embeddings, dim=1, keepdims=False)
 
-        return all_A_embeddings, all_B_embeddings, A_values
+        return all_A_embeddings.to(self.device), all_B_embeddings.to(self.device), A_values.to(self.device)
 
     def _convert_A_values_to_A_factors_with_P(self, f_num, A_factor_values, all_h_list, all_t_list, numA, numB,
                                               A_inshape, pick=False):
