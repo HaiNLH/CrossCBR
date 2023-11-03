@@ -14,6 +14,7 @@ import torch
 import torch.optim as optim
 from utility import Datasets
 from models.CrossCBR import CrossCBR
+import numpy as np
 
 
 def get_cmd():
@@ -56,6 +57,9 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     conf["device"] = device
     print(conf)
+
+    torch.manual_seed(conf["seed"])
+    np.random.seed(conf["seed"])
 
     for lr, l2_reg, item_level_ratio, bundle_level_ratio, bundle_agg_ratio, embedding_size, num_layers, c_lambda, c_temp in \
             product(conf['lrs'], conf['l2_regs'], conf['item_level_ratios'], conf['bundle_level_ratios'], conf['bundle_agg_ratios'], conf["embedding_sizes"], conf["num_layerss"], conf["c_lambdas"], conf["c_temps"]):

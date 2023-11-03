@@ -43,3 +43,6 @@ runs/*
 log
 log*
 log/*
+versionlog
+datasets
+test
