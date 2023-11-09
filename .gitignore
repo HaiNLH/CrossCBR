@@ -44,5 +44,6 @@ log
 log*
 log/*
 versionlog
-datasets
+dataset
+# datasets
 test
