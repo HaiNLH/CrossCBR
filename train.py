@@ -34,6 +34,14 @@ def main():
 
     paras = get_cmd().__dict__
     dataset_name = paras["dataset"]
+    #fix seed
+    seed = 2023
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
 
     assert paras["model"] in ["CrossCBR"], "Pls select models from: CrossCBR"
 
