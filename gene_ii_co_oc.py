@@ -81,6 +81,7 @@ if __name__ == '__main__':
     pbar = tqdm(enumerate([ui.T, bi.T, ub.T, bi]), total = 4, desc="gene", ncols=100)
     asym_mat = []
     for i, mat in pbar:
+        print(gen_ii_asym(mat))
         asym_mat.append(gen_ii_asym(mat))
 
     pbar = tqdm(enumerate(["/iui_cooc.npz", "/ibi_cooc.npz", "/bub_cooc.npz", "/bib_cooc.npz"]), total = 4, desc="save", ncols=100)

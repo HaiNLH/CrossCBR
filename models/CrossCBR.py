@@ -113,14 +113,28 @@ class CrossCBR(nn.Module):
         self.iui_edge_index = torch.tensor(np.load("datasets/{}/n_neigh_iui.npy".format(conf["dataset"]), allow_pickle=True)).to(self.device)
         self.iui_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
         self.ibi_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
-    
+        self.iui_asym = self.get_ii_asym(self.ui_graph.T)
+        self.ibi_asym = self.get_ii_asym(self.ubi_graph.T)
 
     def init_md_dropouts(self):
         self.item_level_dropout = nn.Dropout(self.conf["item_level_ratio"], True)
         self.bundle_level_dropout = nn.Dropout(self.conf["bundle_level_ratio"], True)
         self.bundle_agg_dropout = nn.Dropout(self.conf["bundle_agg_ratio"], True)
 
-
+    def get_ii_asym(self, ix_mat):
+        ii_co = ix_mat @ ix_mat.T
+        i_count = ix_mat.sum(axis=1)
+        print(i_count)
+        i_count += (i_count == 0) # mask all zero with 1
+        print(i_count)
+        # return norm_ii
+        # return ii_asym
+        # mask = ii_co > threshold
+        # ii_co = ii_co.multiply(mask)
+        ii_asym = ii_co / i_count
+        # normalize by row -> asym matrix
+        return ii_asym
+        
     def init_emb(self):
         self.users_feature = nn.Parameter(torch.FloatTensor(self.num_users, self.embedding_size))
         nn.init.xavier_normal_(self.users_feature)
@@ -281,7 +295,8 @@ class CrossCBR(nn.Module):
     def propagate(self, test=False):
         #  =============================  item level propagation  =============================
         #  ======== UI =================
-        IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
+        # IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
+        IL_items_feat = torch.spmm(self.iui_asym,self.items_feature) * self.nw + self.items_feature * self.sw
 
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
@@ -292,7 +307,9 @@ class CrossCBR(nn.Module):
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
 
         # ========== BI ================
-        IL_items_feat2 = self.ibi_gat_conv(self.items_feature, self.ibi_edge_index) * self.nw + self.items_feature * self.sw
+        # IL_items_feat2 = self.ibi_gat_conv(self.items_feature, self.ibi_edge_index) * self.nw + self.items_feature * self.sw
+        IL_items_feat2 = torch.spmm(self.ibi_asym,self.items_feature) * self.nw + self.items_feature * self.sw
+
         if test:
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)
         else:
