@@ -296,7 +296,7 @@ class CrossCBR(nn.Module):
         #  =============================  item level propagation  =============================
         #  ======== UI =================
         # IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
-        IL_items_feat = torch.spmm(self.iui_asym,self.items_feature) * self.nw + self.items_feature * self.sw
+        IL_items_feat = torch.spmm(self.iui_asym,torch.tensor(self.items_feature)) * self.nw + torch.tensor(self.items_feature) * self.sw
 
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
@@ -308,7 +308,7 @@ class CrossCBR(nn.Module):
 
         # ========== BI ================
         # IL_items_feat2 = self.ibi_gat_conv(self.items_feature, self.ibi_edge_index) * self.nw + self.items_feature * self.sw
-        IL_items_feat2 = torch.spmm(self.ibi_asym,self.items_feature) * self.nw + self.items_feature * self.sw
+        IL_items_feat2 = torch.spmm(self.ibi_asym,torch.tensor(self.items_feature)) * self.nw + torch.tensor(self.items_feature) * self.sw
 
         if test:
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)

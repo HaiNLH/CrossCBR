@@ -44,6 +44,7 @@ def gen_ii_asym(ix_mat, threshold=0):
     ii_co = ii_co.multiply(mask)
     # ii_asym = ii_co / i_count
     # normalize by row -> asym matrix
+    
     return ii_co
 
 def get_cmd():
