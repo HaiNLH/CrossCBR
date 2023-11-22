@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import scipy.sparse as sp 
 from gene_ii_co_oc import load_sp_mat
 from models.AsymModule import AsymMatrix
-
+from scipy.sparse import coo_matrix
 
 def cal_bpr_loss(pred):
     # pred: [bs, 1+neg_num]
@@ -33,7 +33,8 @@ def laplace_transform(graph):
 
 
 def to_tensor(graph):
-    graph = graph.tocoo()
+    if not isinstance(graph, scipy.sparse.coo.coo_matrix):
+        graph = coo_matrix(graph)
     values = graph.data
     indices = np.vstack((graph.row, graph.col))
     graph = torch.sparse.FloatTensor(torch.LongTensor(indices), torch.FloatTensor(values), torch.Size(graph.shape))
@@ -115,7 +116,9 @@ class CrossCBR(nn.Module):
         self.iui_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
         self.ibi_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
         self.iui_asym = to_tensor(self.get_ii_asym(self.ui_graph.T)).to(self.device)
+        print("done GEN iui asym")
         self.ibi_asym = to_tensor(self.get_ii_asym(self.ubi_graph.T)).to(self.device)
+        print("done GEN ibi asym")
 
     def init_md_dropouts(self):
         self.item_level_dropout = nn.Dropout(self.conf["item_level_ratio"], True)
