@@ -33,8 +33,8 @@ def laplace_transform(graph):
 
 
 def to_tensor(graph):
-    if not isinstance(graph, scipy.sparse.coo.coo_matrix):
-        graph = coo_matrix(graph)
+    
+    graph = coo_matrix(graph)
     values = graph.data
     indices = np.vstack((graph.row, graph.col))
     graph = torch.sparse.FloatTensor(torch.LongTensor(indices), torch.FloatTensor(values), torch.Size(graph.shape))
