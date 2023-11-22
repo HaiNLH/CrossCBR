@@ -137,6 +137,8 @@ class CrossCBR(nn.Module):
         # ii_co = ii_co.multiply(mask)
         ii_asym = ii_co / i_count
         # normalize by row -> asym matrix
+        print(type(ii_asym))
+        print(ii_asym)
         return ii_asym
         
     def init_emb(self):
