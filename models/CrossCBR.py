@@ -113,8 +113,8 @@ class CrossCBR(nn.Module):
         self.iui_edge_index = torch.tensor(np.load("datasets/{}/n_neigh_iui.npy".format(conf["dataset"]), allow_pickle=True)).to(self.device)
         self.iui_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
         self.ibi_gat_conv = Amatrix(in_dim=64, out_dim=64, n_layer=1, dropout=0.1, heads=self.n_head, concat=False, self_loop=self.a_self_loop, extra_layer=self.extra_layer)
-        self.iui_asym = self.get_ii_asym(self.ui_graph.T)
-        self.ibi_asym = self.get_ii_asym(self.ubi_graph.T)
+        self.iui_asym = to_tensor(self.get_ii_asym(self.ui_graph.T)).to(self.device)
+        self.ibi_asym = to_tensor(self.get_ii_asym(self.ubi_graph.T)).to(self.device)
 
     def init_md_dropouts(self):
         self.item_level_dropout = nn.Dropout(self.conf["item_level_ratio"], True)
@@ -296,27 +296,27 @@ class CrossCBR(nn.Module):
         #  =============================  item level propagation  =============================
         #  ======== UI =================
         # IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
-        IL_items_feat = torch.spmm(self.iui_asym,torch.tensor(self.items_feature)) * self.nw + torch.tensor(self.items_feature) * self.sw
+       
 
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
         else:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
-
+        IL_items_feat = torch.spmm((self.iui_asym),IL_items_feature) * self.nw + IL_items_feature * self.sw
         # aggregate the items embeddings within one bundle to obtain the bundle representation
-        IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
+        IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feat, test)
 
         # ========== BI ================
         # IL_items_feat2 = self.ibi_gat_conv(self.items_feature, self.ibi_edge_index) * self.nw + self.items_feature * self.sw
-        IL_items_feat2 = torch.spmm(self.ibi_asym,torch.tensor(self.items_feature)) * self.nw + torch.tensor(self.items_feature) * self.sw
 
         if test:
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)
         else:
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)
-        
+        IL_items_feat2 = torch.spmm((self.ibi_asym),IL_items_feature2) * self.nw + IL_items_feature2 * self.sw
+
         # agg item -> user
-        BIL_users_feature = self.get_IL_user_rep(IL_items_feature2, test)
+        BIL_users_feature = self.get_IL_user_rep(IL_items_feat2, test)
 
         # w3: 0.2, w4: 0.8
         fuse_bundles_feature = IL_bundles_feature * (1 - self.w3) + BIL_bundles_feature * self.w3
