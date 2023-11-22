@@ -319,10 +319,10 @@ class CrossCBR(nn.Module):
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, self.items_feature, self.item_level_dropout, test, self.BI_coefs)
         else:
             BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph, self.bundles_feature, self.items_feature, self.item_level_dropout, test, self.BI_coefs)
-        IL_items_feat2 = torch.spmm((self.ibi_asym),IL_items_feature2) * self.nw + IL_items_feature2 * self.sw
+        # IL_items_feat2 = torch.spmm((self.ibi_asym),IL_items_feature2) * self.nw + IL_items_feature2 * self.sw
 
         # agg item -> user
-        BIL_users_feature = self.get_IL_user_rep(IL_items_feat2, test)
+        BIL_users_feature = self.get_IL_user_rep(IL_items_feature2, test)
 
         # w3: 0.2, w4: 0.8
         fuse_bundles_feature = IL_bundles_feature * (1 - self.w3) + BIL_bundles_feature * self.w3
