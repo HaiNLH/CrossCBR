@@ -70,6 +70,7 @@ class CrossCBR(nn.Module):
 
         assert isinstance(raw_graph, list)
         self.ub_graph, self.ui_graph, self.bi_graph = raw_graph
+        print(type(self.ui_graph))
 
         self.ubi_graph = self.ub_graph @ self.bi_graph
 
