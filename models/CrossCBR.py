@@ -300,9 +300,9 @@ class CrossCBR(nn.Module):
        
 
         if test:
-            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
+            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test, self.UI_coefs)
         else:
-            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, IL_items_feat, self.item_level_dropout, test, self.UI_coefs)
+            IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test, self.UI_coefs)
         IL_items_feat = torch.spmm((self.iui_asym),IL_items_feature) * self.nw + IL_items_feature * self.sw
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feat, test)
@@ -311,9 +311,9 @@ class CrossCBR(nn.Module):
         # IL_items_feat2 = self.ibi_gat_conv(self.items_feature, self.ibi_edge_index) * self.nw + self.items_feature * self.sw
 
         if test:
-            BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)
+            BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph_ori, self.bundles_feature, self.items_feature, self.item_level_dropout, test, self.BI_coefs)
         else:
-            BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph, self.bundles_feature, IL_items_feat2, self.item_level_dropout, test, self.BI_coefs)
+            BIL_bundles_feature, IL_items_feature2 = self.one_propagate(self.bi_propagate_graph, self.bundles_feature, self.items_feature, self.item_level_dropout, test, self.BI_coefs)
         IL_items_feat2 = torch.spmm((self.ibi_asym),IL_items_feature2) * self.nw + IL_items_feature2 * self.sw
 
         # agg item -> user
