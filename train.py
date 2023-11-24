@@ -10,6 +10,7 @@ from itertools import product
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 
+
 import torch
 import torch.optim as optim
 from utility import Datasets
@@ -210,7 +211,7 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
 
     log = open(log_path, "a")
 
-    topk_ = 20
+    topk_ = 3
     print("top%d as the final evaluation standard" %(topk_))
     if metrics["val"]["recall"][topk_] > best_metrics["val"]["recall"][topk_] and metrics["val"]["ndcg"][topk_] > best_metrics["val"]["ndcg"][topk_]:
         torch.save(model.state_dict(), checkpoint_model_path)
