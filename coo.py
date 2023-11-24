@@ -14,10 +14,11 @@ data = [1, 2, 3, 4, 5]
 row_indices = [0 , 0, 1, 2, 2]
 col_indices = [1, 2, 0, 1, 2]
 
-coo_graph = sp.coo_matrix((data, (row_indices, col_indices)), shape=(3, 3)).todense()
+coo_graph = sp.coo_matrix((data, (row_indices, col_indices)), shape=(3, 3))
 i_count = coo_graph.sum(axis=1)
 print(i_count)
 # Convert COO matrix to PyTorch sparse tensor
 # tensor_graph = to_tensor(coo_graph).to_dense()
-
-print(coo_graph)
+test_graph = coo_graph*coo_graph
+print(test_graph.todense())
+print(coo_graph.todense()*coo_graph.todense())

@@ -133,8 +133,8 @@ class CrossCBR(nn.Module):
         print(i_count)
         # return norm_ii
         # return ii_asym
-        # mask = ii_co > threshold
-        # ii_co = ii_co.multiply(mask)
+        mask = ii_co > 4
+        ii_co = ii_co.multiply(mask)
         ii_asym = ii_co / i_count
         # normalize by row -> asym matrix
         print(type(ii_asym))
@@ -302,7 +302,8 @@ class CrossCBR(nn.Module):
         #  =============================  item level propagation  =============================
         #  ======== UI =================
         # IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
-       
+        # self.items_feature * self.iui_edge_index
+        # N*N matmul#(n*64)
 
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test, self.UI_coefs)
