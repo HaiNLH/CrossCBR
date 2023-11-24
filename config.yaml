@@ -122,6 +122,7 @@ Steam:
   topk_valid: 3
   nhead: 3
   extra_layer: False
+  test_interval: 5
 
 # ------------------- amazon datasets ---------------------
 food:

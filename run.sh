@@ -14,6 +14,11 @@ python gene_ii_co_oc.py -d NetEase
 python preProcess.py -d NetEase -ibi 10 -iui 9
 python train.py -d NetEase -w3 0.8 -w4 0.8
 
+# Steam
+python gene_ii_co_oc.py -d Steam
+python preProcess.py -d Steam -ibi 10 -iui 9
+python train.py -d Steam -w3 0.8 -w4 0.8
+
 # clothing
 python gene_ii_co_oc.py -d clothing
 python preProcess.py -d clothing
