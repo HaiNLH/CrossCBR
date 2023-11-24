@@ -10,7 +10,7 @@ def to_tensor(graph):
     return graph
 
 # Example COO matrix
-data = [1, 2, 3, 4, 5]
+data = [1, 0, 1, 1, 0]
 row_indices = [0 , 0, 1, 2, 2]
 col_indices = [1, 2, 0, 1, 2]
 
@@ -19,6 +19,7 @@ i_count = coo_graph.sum(axis=1)
 print(i_count)
 # Convert COO matrix to PyTorch sparse tensor
 # tensor_graph = to_tensor(coo_graph).to_dense()
-test_graph = coo_graph*coo_graph
+test_graph = coo_graph@coo_graph.T
+print(coo_graph.todense())
 print(test_graph.todense())
-print(coo_graph.todense()*coo_graph.todense())
+
