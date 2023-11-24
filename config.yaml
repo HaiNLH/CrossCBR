@@ -102,7 +102,7 @@ Steam:
   ed_interval: 1
   embedding_sizes: [64]
   num_layerss: [1]
-  lrs: [1.0e-3]
+  lrs: [1.0e-4]
   item_level_ratios: [0.2]
   bundle_level_ratios: [0.2]
   bundle_agg_ratios: [0]
@@ -110,7 +110,7 @@ Steam:
   self_loop: False
   c_lambdas: [0.25]
   c_temps: [0.2]
-  epochs: 60
+  epochs: 100
   topk_valid: 20
   UI_layers: [0.7, 0.3]
   seed: 2023
@@ -120,7 +120,7 @@ Steam:
   sep: "\t"
   file_type: ".txt"
   topk_valid: 3
-  nhead: 3
+  nhead: 2
   extra_layer: False
   test_interval: 5
 
