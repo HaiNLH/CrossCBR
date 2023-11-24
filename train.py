@@ -14,6 +14,7 @@ import torch
 import torch.optim as optim
 from utility import Datasets
 from models.CrossCBR import CrossCBR
+import random
 
 
 def get_cmd():
