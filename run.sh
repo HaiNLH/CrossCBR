@@ -16,8 +16,8 @@ python train.py -d NetEase -w3 0.8 -w4 0.8
 
 # Steam
 python gene_ii_co_oc.py -d Steam
-python preProcess.py -d Steam -ibi 10 -iui 9
-python train.py -d Steam -w3 0.8 -w4 0.8
+python preProcess.py -d Steam
+python train.py -d Steam -w3 0.1 -w4 0.1
 
 # clothing
 python gene_ii_co_oc.py -d clothing
