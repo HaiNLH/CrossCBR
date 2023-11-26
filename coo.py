@@ -19,7 +19,7 @@ co_graph = coo_graph@coo_graph.T
 final = co_graph*co_graph*2
 i_count = coo_graph.sum(axis=1)
 i =  final/i_count
-print(i.tocoo())
+print(i.tosparse())
 # print(i_count)
 # print(final/i_count)
 # # Convert COO matrix to PyTorch sparse tensor

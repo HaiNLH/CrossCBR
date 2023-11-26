@@ -30,7 +30,7 @@ def filter(threshold, mat):
     mat = mat * mask
     return mat
 
-def gen_ii_asym(ix_mat, threshold=0):
+def gen_ii_asym(ix_mat, threshold=4):
     '''
     mat: ui or bi
     '''
