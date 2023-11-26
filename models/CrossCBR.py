@@ -129,7 +129,7 @@ class CrossCBR(nn.Module):
 
     def get_ii_asym(self, ix_mat):
         ii_co = ix_mat @ ix_mat.T
-        final = ii_co*ii_co*2
+        
         i_count = ix_mat.sum(axis=1)
         print(i_count)
         i_count += (i_count == 0) # mask all zero with 1
@@ -138,6 +138,7 @@ class CrossCBR(nn.Module):
         # return ii_asym
         mask = ii_co > 4
         ii_co = ii_co.multiply(mask)
+        final = ii_co*ii_co*2
         ii_asym = final / i_count
         return ii_asym
         
