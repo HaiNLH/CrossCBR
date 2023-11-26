@@ -102,7 +102,7 @@ Steam:
   ed_interval: 1
   embedding_sizes: [64]
   num_layerss: [1]
-  lrs: [1.0e-3]
+  lrs: [1.0e-3 ]
   item_level_ratios: [0.2]
   bundle_level_ratios: [0.2]
   bundle_agg_ratios: [0]
