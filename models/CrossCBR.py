@@ -9,6 +9,43 @@ from gene_ii_co_oc import load_sp_mat
 from models.AsymModule import AsymMatrix
 from scipy.sparse import coo_matrix
 
+
+#Adding UHBR
+def Split_HyperGraph_to_device(H, device, split_num=16):
+    H_list = []
+    length = H.shape[0] // split_num
+    for i in range(split_num):
+        if i == split_num - 1:
+            H_list.append(H[length * i : H.shape[0]])
+        else:
+            H_list.append(H[length * i : length * (i + 1)])
+    H_split = [SparseTensor.from_scipy(H_i).to(device) for H_i in H_list]
+    return H_split
+def normalize_Hyper(H):
+    D_v = sp.diags(1 / (np.sqrt(H.sum(axis=1).A.ravel()) + 1e-8))
+    D_e = sp.diags(1 / (np.sqrt(H.sum(axis=0).A.ravel()) + 1e-8))
+    H_nomalized = D_v @ H @ D_e @ H.T @ D_v
+    return H_nomalized
+
+
+def mix_hypergraph(raw_graph, threshold=10):
+    ui_graph, bi_graph, ub_graph = raw_graph
+
+    uu_graph = ub_graph @ ub_graph.T
+    for i in range(ub_graph.shape[0]):
+        for r in range(uu_graph.indptr[i], uu_graph.indptr[i + 1]):
+            uu_graph.data[r] = 1 if uu_graph.data[r] > threshold else 0
+
+    bb_graph = ub_graph.T @ ub_graph
+    for i in range(ub_graph.shape[1]):
+        for r in range(bb_graph.indptr[i], bb_graph.indptr[i + 1]):
+            bb_graph.data[r] = 1 if bb_graph.data[r] > threshold else 0
+
+    H = sp.vstack((ui_graph, bi_graph))
+    non_atom_graph = sp.vstack((ub_graph, bb_graph))
+    non_atom_graph = sp.hstack((non_atom_graph, sp.vstack((uu_graph, ub_graph.T))))
+    H = sp.hstack((H, non_atom_graph))
+    return H
 def cal_bpr_loss(pred):
     # pred: [bs, 1+neg_num]
     if pred.shape[1] > 2:
@@ -122,6 +159,39 @@ class CrossCBR(nn.Module):
         print("done GEN ibi asym")
         print(type(self.ibi_asym))
 
+
+        #UHBR
+        ui_graph, bi_graph, ub_graph = raw_graph
+        self.num_users, self.num_bundles, self.num_items = (
+            ub_graph.shape[0],
+            ub_graph.shape[1],
+            ui_graph.shape[1],
+        )
+        H = mix_hypergraph(raw_graph)
+        self.atom_graph = Split_HyperGraph_to_device(normalize_Hyper(H), device)
+
+        print("finish generating hypergraph")
+        # embeddings
+        self.users_feature_hg = nn.Parameter(
+            torch.FloatTensor(self.num_users, self.embedding_sizes).normal_(0, 0.5 / self.embedding_sizes)
+        )
+        self.bundles_feature_hg = nn.Parameter(
+            torch.FloatTensor(self.num_bundles, self.embedding_sizes).normal_(0, 0.5 / self.embedding_sizes)
+        )
+        self.user_bound = nn.Parameter(
+            torch.FloatTensor(self.embedding_sizes, 1).normal_(0, 0.5 / self.embedding_sizes)
+        )
+        self.drop = nn.Dropout(dp)
+        self.embed_L2_norm = l2_norm
+    def hyper_propagate(self):
+        embed_0 = torch.cat([self.users_feature_hg, self.bundles_feature_hg], dim=0)
+        embed_1 = torch.cat([G @ embed_0 for G in self.atom_graph], dim=0)
+        all_embeds = embed_0 / 2 + self.drop(embed_1) / 3
+        users_feature_hg, bundles_feature_hg = torch.split(
+            all_embeds, [self.num_users, self.num_bundles], dim=0
+        )
+
+        return users_feature_hg, bundles_feature_hg
     def init_md_dropouts(self):
         self.item_level_dropout = nn.Dropout(self.conf["item_level_ratio"], True)
         self.bundle_level_dropout = nn.Dropout(self.conf["bundle_level_ratio"], True)
@@ -270,7 +340,7 @@ class CrossCBR(nn.Module):
 
         return A_feature, B_feature
 
-
+    
     def get_IL_bundle_rep(self, IL_items_feature, test):
         if test:
             IL_bundles_feature = torch.matmul(self.bundle_agg_graph_ori, IL_items_feature)
@@ -330,9 +400,11 @@ class CrossCBR(nn.Module):
 
         #  ============================= bundle level propagation =============================
         if test:
-            BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
+            # BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
+            BL_users_feature, BL_bundles_feature = self.hyper_propagate(self)
         else:
-            BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
+            BL_users_feature, BL_bundles_feature = self.hyper_propagate(self)
+            # BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
 
         users_feature = [fuse_users_feature, BL_users_feature]
         bundles_feature = [fuse_bundles_feature, BL_bundles_feature]
