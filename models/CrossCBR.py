@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import scipy.sparse as sp 
 from gene_ii_co_oc import load_sp_mat
 from models.AsymModule import AsymMatrix
+from torch_sparse import SparseTensor
 from scipy.sparse import coo_matrix
 
 
@@ -40,8 +41,8 @@ def mix_hypergraph(raw_graph, threshold=10):
     for i in range(ub_graph.shape[1]):
         for r in range(bb_graph.indptr[i], bb_graph.indptr[i + 1]):
             bb_graph.data[r] = 1 if bb_graph.data[r] > threshold else 0
-
-    H = sp.vstack((ui_graph, bi_graph))
+    # print(ui_graph.shape[1], bi_graph.shape[1])
+    H = sp.vstack((ui_graph.T, bi_graph.T))
     non_atom_graph = sp.vstack((ub_graph, bb_graph))
     non_atom_graph = sp.hstack((non_atom_graph, sp.vstack((uu_graph, ub_graph.T))))
     H = sp.hstack((H, non_atom_graph))
@@ -161,11 +162,13 @@ class CrossCBR(nn.Module):
 
 
         #UHBR
-        ui_graph, bi_graph, ub_graph = raw_graph
         self.num_users, self.num_bundles, self.num_items = (
-            ub_graph.shape[0],
-            ub_graph.shape[1],
-            ui_graph.shape[1],
+            self.ub_graph.shape[0],
+            print(self.ub_graph.shape[0])
+            self.ub_graph.shape[1],
+            print(self.ub_graph.shape[1]),
+            self.ui_graph.shape[1],
+            print(self.ui_graph.shape[1])
         )
         H = mix_hypergraph(raw_graph)
         self.atom_graph = Split_HyperGraph_to_device(normalize_Hyper(H), device)
@@ -173,16 +176,16 @@ class CrossCBR(nn.Module):
         print("finish generating hypergraph")
         # embeddings
         self.users_feature_hg = nn.Parameter(
-            torch.FloatTensor(self.num_users, self.embedding_sizes).normal_(0, 0.5 / self.embedding_sizes)
+            torch.FloatTensor(self.num_users, self.embedding_size).normal_(0, 0.5 / self.embedding_size)
         )
         self.bundles_feature_hg = nn.Parameter(
-            torch.FloatTensor(self.num_bundles, self.embedding_sizes).normal_(0, 0.5 / self.embedding_sizes)
+            torch.FloatTensor(self.num_bundles, self.embedding_size).normal_(0, 0.5 / self.embedding_size)
         )
         self.user_bound = nn.Parameter(
-            torch.FloatTensor(self.embedding_sizes, 1).normal_(0, 0.5 / self.embedding_sizes)
+            torch.FloatTensor(self.embedding_size, 1).normal_(0, 0.5 / self.embedding_size)
         )
-        self.drop = nn.Dropout(dp)
-        self.embed_L2_norm = l2_norm
+        self.drop = nn.Dropout(0.2)
+        
     def hyper_propagate(self):
         embed_0 = torch.cat([self.users_feature_hg, self.bundles_feature_hg], dim=0)
         embed_1 = torch.cat([G @ embed_0 for G in self.atom_graph], dim=0)
@@ -401,9 +404,9 @@ class CrossCBR(nn.Module):
         #  ============================= bundle level propagation =============================
         if test:
             # BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
-            BL_users_feature, BL_bundles_feature = self.hyper_propagate(self)
+            BL_users_feature, BL_bundles_feature = self.hyper_propagate()
         else:
-            BL_users_feature, BL_bundles_feature = self.hyper_propagate(self)
+            BL_users_feature, BL_bundles_feature = self.hyper_propagate()
             # BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
 
         users_feature = [fuse_users_feature, BL_users_feature]
