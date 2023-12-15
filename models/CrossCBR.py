@@ -29,8 +29,7 @@ def normalize_Hyper(H):
     return H_nomalized
 
 
-def mix_hypergraph(raw_graph, threshold=10):
-    ui_graph, bi_graph, ub_graph = raw_graph
+def mix_hypergraph(ui_graph,  ub_graph,bi_graph, threshold=10):
 
     uu_graph = ub_graph @ ub_graph.T
     for i in range(ub_graph.shape[0]):
@@ -41,8 +40,8 @@ def mix_hypergraph(raw_graph, threshold=10):
     for i in range(ub_graph.shape[1]):
         for r in range(bb_graph.indptr[i], bb_graph.indptr[i + 1]):
             bb_graph.data[r] = 1 if bb_graph.data[r] > threshold else 0
-    # print(ui_graph.shape[1], bi_graph.shape[1])
-    H = sp.vstack((ui_graph.T, bi_graph.T))
+    print(ui_graph.shape, bi_graph.shape)
+    H = sp.vstack((ui_graph, bi_graph))
     non_atom_graph = sp.vstack((ub_graph, bb_graph))
     non_atom_graph = sp.hstack((non_atom_graph, sp.vstack((uu_graph, ub_graph.T))))
     H = sp.hstack((H, non_atom_graph))
@@ -109,10 +108,12 @@ class CrossCBR(nn.Module):
 
         assert isinstance(raw_graph, list)
         self.ub_graph, self.ui_graph, self.bi_graph = raw_graph
+        print(self.ui_graph.shape)
+        print(self.bi_graph.shape)
         print(type(self.ui_graph))
 
         self.ubi_graph = self.ub_graph @ self.bi_graph
-
+        print(self.ui_graph.shape)
         self.ovl_ui = self.ubi_graph.tocsr().multiply(self.ui_graph.tocsr())
         self.ovl_ui = self.ovl_ui > 0
         self.non_ovl_ui = self.ui_graph - self.ovl_ui
@@ -162,15 +163,19 @@ class CrossCBR(nn.Module):
 
 
         #UHBR
+        
         self.num_users, self.num_bundles, self.num_items = (
             self.ub_graph.shape[0],
-            print(self.ub_graph.shape[0])
+            
             self.ub_graph.shape[1],
-            print(self.ub_graph.shape[1]),
+            
             self.ui_graph.shape[1],
-            print(self.ui_graph.shape[1])
+            
         )
-        H = mix_hypergraph(raw_graph)
+        print(self.ui_graph.shape)
+        print(self.bi_graph.shape)
+        print(type(self.ui_graph))
+        H = mix_hypergraph(self.ui_graph, self.ub_graph, self.bi_graph)
         self.atom_graph = Split_HyperGraph_to_device(normalize_Hyper(H), device)
 
         print("finish generating hypergraph")
@@ -203,9 +208,9 @@ class CrossCBR(nn.Module):
     def get_ii_asym(self, ix_mat):
         ii_co = ix_mat @ ix_mat.T
         i_count = ix_mat.sum(axis=1)
-        print(i_count)
+        
         i_count += (i_count == 0) # mask all zero with 1
-        print(i_count)
+        
         # return norm_ii
         # return ii_asym
         mask = ii_co > 4

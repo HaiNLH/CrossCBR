@@ -131,7 +131,7 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=conf["l2_reg"])
 
         batch_cnt = len(dataset.train_loader)
-        test_interval_bs = int(batch_cnt * conf["test_interval"])
+        # test_interval_bs = int(batch_cnt * conf["test_interval"])
         ed_interval_bs = int(batch_cnt * conf["ed_interval"])
 
         best_metrics, best_perform = init_best_metrics(conf)
@@ -164,11 +164,11 @@ def main():
 
                 pbar.set_description("epoch: %d, loss: %.4f, bpr_loss: %.4f, c_loss: %.4f" %(epoch, loss_scalar, bpr_loss_scalar, c_loss_scalar))
             
-            if (batch_anchor+1) % test_interval_bs == 0:  
-                    metrics = {}
-                    metrics["val"] = test(model, dataset.val_loader, conf)
-                    metrics["test"] = test(model, dataset.test_loader, conf)
-                    best_metrics, best_perform, best_epoch = log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, checkpoint_conf_path, epoch, batch_anchor, best_metrics, best_perform, best_epoch)
+           
+            metrics = {}
+            metrics["val"] = test(model, dataset.val_loader, conf)
+            metrics["test"] = test(model, dataset.test_loader, conf)
+            best_metrics, best_perform, best_epoch = log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, checkpoint_conf_path, epoch, batch_anchor, best_metrics, best_perform, best_epoch)
 
 def init_best_metrics(conf):
     best_metrics = {}
