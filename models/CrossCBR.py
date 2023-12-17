@@ -414,8 +414,10 @@ class CrossCBR(nn.Module):
             BL_users_feature, BL_bundles_feature = self.hyper_propagate()
             # BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test, self.UB_coefs)
 
-        users_feature = [fuse_users_feature, BL_users_feature]
-        bundles_feature = [fuse_bundles_feature, BL_bundles_feature]
+        # users_feature = [fuse_users_feature, BL_users_feature]
+        # bundles_feature = [fuse_bundles_feature, BL_bundles_feature]
+        users_feature = [ BL_users_feature]
+        bundles_feature = [BL_bundles_feature]
 
         return users_feature, bundles_feature
     
