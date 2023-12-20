@@ -191,7 +191,7 @@ class CrossCBR(nn.Module):
         )
         self.drop = nn.Dropout(0.2)
         
-    def propagate(self):
+    def propagate(self, test = True):
         embed_0 = torch.cat([self.users_feature_hg, self.bundles_feature_hg], dim=0)
         embed_1 = torch.cat([G @ embed_0 for G in self.atom_graph], dim=0)
         all_embeds = embed_0 / 2 + self.drop(embed_1) / 3
@@ -469,6 +469,7 @@ class CrossCBR(nn.Module):
 
         # users: [bs, 1]
         # bundles: [bs, 1+neg_num]
+        users, bundles = batch
         users_feature, bundles_feature = self.propagate()
         users_embedding = users_feature[users].expand(-1, bundles.shape[1], -1)
         bundles_embedding = bundles_feature[bundles]

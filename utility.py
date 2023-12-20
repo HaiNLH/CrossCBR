@@ -172,3 +172,27 @@ class Datasets():
         print_statistics(u_b_graph, "U-B statistics in %s" %(task))
 
         return u_b_pairs, u_b_graph
+class data_prefetcher:
+    def __init__(self, loader, device):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream(device)
+        self.device = device
+        self.preload()
+
+    def preload(self):
+        try:
+            self.next_user, self.next_bundle = next(self.loader)
+        except StopIteration:
+            self.next_user = None
+            self.next_bundle = None
+            return
+        with torch.cuda.stream(self.stream):
+            self.next_user = self.next_user.to(self.device, non_blocking=True)
+            self.next_bundle = self.next_bundle.to(self.device, non_blocking=True)
+
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        user = self.next_user
+        bundle = self.next_bundle
+        self.preload()
+        return user, bundle

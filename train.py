@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 import torch.optim as optim
 from utility import Datasets
+from utility import data_prefetcher
 from models.CrossCBR import CrossCBR
 import numpy as np
 
@@ -136,11 +137,14 @@ def main():
 
         best_metrics, best_perform = init_best_metrics(conf)
         best_epoch = 0
+        prefetcher = data_prefetcher(dataset.train_loader, device)
+        users, bundles = prefetcher.next()
         for epoch in range(conf['epochs']):
+            prefetcher = data_prefetcher(dataset.train_loader, device)
             epoch_anchor = epoch * batch_cnt
             model.train(True)
             pbar = tqdm(enumerate(dataset.train_loader), total=len(dataset.train_loader))
-
+            users, bundles = prefetcher.next()
             for batch_i, batch in pbar:
                 model.train(True)
                 optimizer.zero_grad()
