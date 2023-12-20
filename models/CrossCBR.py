@@ -191,14 +191,13 @@ class CrossCBR(nn.Module):
         )
         self.drop = nn.Dropout(0.2)
         
-    def hyper_propagate(self):
+    def propagate(self):
         embed_0 = torch.cat([self.users_feature_hg, self.bundles_feature_hg], dim=0)
         embed_1 = torch.cat([G @ embed_0 for G in self.atom_graph], dim=0)
         all_embeds = embed_0 / 2 + self.drop(embed_1) / 3
         users_feature_hg, bundles_feature_hg = torch.split(
             all_embeds, [self.num_users, self.num_bundles], dim=0
         )
-
         return users_feature_hg, bundles_feature_hg
     def init_md_dropouts(self):
         self.item_level_dropout = nn.Dropout(self.conf["item_level_ratio"], True)
@@ -375,7 +374,7 @@ class CrossCBR(nn.Module):
         return IL_users_feature
 
 
-    def propagate(self, test=False):
+    def a_propagate(self, test=False):
         #  =============================  item level propagation  =============================
         #  ======== UI =================
         IL_items_feat = self.iui_gat_conv(self.items_feature, self.iui_edge_index) * self.nw + self.items_feature * self.sw
@@ -416,7 +415,7 @@ class CrossCBR(nn.Module):
 
         # users_feature = [fuse_users_feature, BL_users_feature]
         # bundles_feature = [fuse_bundles_feature, BL_bundles_feature]
-        users_feature = [ BL_users_feature]
+        users_feature = [BL_users_feature]
         bundles_feature = [BL_bundles_feature]
 
         return users_feature, bundles_feature
@@ -444,19 +443,19 @@ class CrossCBR(nn.Module):
     def cal_loss(self, users_feature, bundles_feature):
         # IL: item_level, BL: bundle_level
         # [bs, 1, emb_size]
-        IL_users_feature, BL_users_feature = users_feature
+        BL_users_feature = users_feature
         # [bs, 1+neg_num, emb_size]
-        IL_bundles_feature, BL_bundles_feature = bundles_feature
+        BL_bundles_feature = bundles_feature
         # [bs, 1+neg_num]
-        pred = torch.sum(IL_users_feature * IL_bundles_feature, 2) + torch.sum(BL_users_feature * BL_bundles_feature, 2)
+        pred = torch.sum(BL_users_feature * BL_bundles_feature, 2)
         bpr_loss = cal_bpr_loss(pred)
 
-        u_cross_view_cl = self.cal_c_loss(IL_users_feature, BL_users_feature)
-        b_cross_view_cl = self.cal_c_loss(IL_bundles_feature, BL_bundles_feature)
+        # u_cross_view_cl = self.cal_c_loss(IL_users_feature, BL_users_feature)
+        # b_cross_view_cl = self.cal_c_loss(IL_bundles_feature, BL_bundles_feature)
 
-        c_losses = [u_cross_view_cl, b_cross_view_cl]
+        # c_losses = [u_cross_view_cl, b_cross_view_cl]
 
-        c_loss = sum(c_losses) / len(c_losses)
+        c_loss = 0
 
         return bpr_loss, c_loss
 
@@ -470,23 +469,23 @@ class CrossCBR(nn.Module):
 
         # users: [bs, 1]
         # bundles: [bs, 1+neg_num]
-        users, bundles = batch
         users_feature, bundles_feature = self.propagate()
-
-        users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
-        bundles_embedding = [i[bundles] for i in bundles_feature]
-
-        bpr_loss, c_loss = self.cal_loss(users_embedding, bundles_embedding)
-
-        return bpr_loss, c_loss
+        users_embedding = users_feature[users].expand(-1, bundles.shape[1], -1)
+        bundles_embedding = bundles_feature[bundles]
+        # pred = self.predict(users_embedding, bundles_embedding)
+        # loss = self.regularize(users_feature, bundles_feature)
+        bpr_loss, _ = self.cal_loss(users_embedding, bundles_embedding)
+        # user_score_bound = users_feature[users] @ self.user_bound
+        
+        
+        return bpr_loss, 0
+        # return bpr_loss, c_loss
 
 
     def evaluate(self, propagate_result, users):
         users_feature, bundles_feature = propagate_result
-        users_feature_atom, users_feature_non_atom = [i[users] for i in users_feature]
-        bundles_feature_atom, bundles_feature_non_atom = bundles_feature
-
-        scores = torch.mm(users_feature_atom, bundles_feature_atom.t()) + torch.mm(users_feature_non_atom, bundles_feature_non_atom.t())
+        users_feature = users_feature[users]
+        scores = users_feature @ (bundles_feature.T)
         return scores
     
 
