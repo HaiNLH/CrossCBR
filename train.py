@@ -137,8 +137,6 @@ def main():
 
         best_metrics, best_perform = init_best_metrics(conf)
         best_epoch = 0
-        prefetcher = data_prefetcher(dataset.train_loader, device)
-        users, bundles = prefetcher.next()
         for epoch in range(conf['epochs']):
             prefetcher = data_prefetcher(dataset.train_loader, device)
             epoch_anchor = epoch * batch_cnt
@@ -156,6 +154,7 @@ def main():
                     ED_drop = True
                 bpr_loss, c_loss = model(batch, ED_drop=ED_drop)
                 loss = bpr_loss + conf["c_lambda"] * c_loss
+                loss = bpr_loss + 0 * c_loss
                 loss.backward()
                 optimizer.step()
 

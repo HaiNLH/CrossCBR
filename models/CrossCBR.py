@@ -459,7 +459,9 @@ class CrossCBR(nn.Module):
 
         return bpr_loss, c_loss
 
-
+    def predict(self, users_feature, bundles_feature):
+        pred = torch.sum(users_feature * bundles_feature, 2)
+        return pred
     def forward(self, batch, ED_drop=False):
         # the edge drop can be performed by every batch or epoch, should be controlled in the train loop
         if ED_drop:
@@ -475,13 +477,20 @@ class CrossCBR(nn.Module):
         bundles_embedding = bundles_feature[bundles]
         # pred = self.predict(users_embedding, bundles_embedding)
         # loss = self.regularize(users_feature, bundles_feature)
-        bpr_loss, _ = self.cal_loss(users_embedding, bundles_embedding)
+        # bpr_loss, _ = self.cal_loss(users_embedding, bundles_embedding)
         # user_score_bound = users_feature[users] @ self.user_bound
         
-        
-        return bpr_loss, 0
+        pred = self.predict(users_embedding, bundles_embedding)
+        loss = self.regularize(users_feature, bundles_feature)
+        user_score_bound = users_feature[users] @ self.user_bound
+        # return loss, 0
+        return pred, user_score_bound, loss
         # return bpr_loss, c_loss
-
+    def regularize(self, users_feature, bundles_feature):
+        loss = 0.2 * (
+            (users_feature ** 2).sum() + (bundles_feature ** 2).sum()
+        )
+        return loss
 
     def evaluate(self, propagate_result, users):
         users_feature, bundles_feature = propagate_result

@@ -196,3 +196,28 @@ class data_prefetcher:
         bundle = self.next_bundle
         self.preload()
         return user, bundle
+
+
+class UIBLoss(nn.Module):
+    def __init__(self, alpha=4, reduction="sum"):
+        super().__init__()
+        self.reduction = reduction
+        self.alpha = alpha
+
+    def forward(self, model_output, **kwargs):
+        pred, user_bound, reg_loss = model_output
+        # BPR loss
+        # loss = -torch.log(torch.sigmoid(pred[:, :1] - pred[:, 1:]))
+        loss_p = -torch.log(torch.sigmoid(pred[:, :1] - user_bound))
+        loss_n = -torch.log(torch.sigmoid(user_bound - pred[:, 1:]))
+        loss = loss_p + self.alpha * loss_n
+        # reduction
+        if self.reduction == "mean":
+            loss = torch.mean(loss)
+        elif self.reduction == "sum":
+            loss = torch.sum(loss)
+        elif self.reduction == "none":
+            pass
+        else:
+            raise ValueError("reduction must be  'none' | 'mean' | 'sum'")
+        return loss + reg_loss
