@@ -1,6 +1,6 @@
 *.o
 *.dSYM
-*.csv
+# *.csv
 *.out
 *.jpg
 *.pyc
@@ -40,10 +40,20 @@ checkpoints/*
 runs
 runs*
 runs/*
-log
-log*
-log/*
+# log
+# log*
+# log/*
+
+datasets/Youshu/ibi_cooc.npz
+datasets/Youshu/iui_cooc.npz
+datasets/Youshu/n_neigh_ibi.npz
+datasets/Youshu/n_neigh_iui.npz
+
 versionlog
-dataset
-# datasets
 test
+
+iui_attn
+ibi_attn
+
+*.npy
+*.npz

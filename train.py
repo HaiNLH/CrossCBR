@@ -24,6 +24,13 @@ def get_cmd():
     parser.add_argument("-d", "--dataset", default="Youshu", type=str, help="which dataset to use, options: NetEase, Youshu, iFashion")
     parser.add_argument("-m", "--model", default="CrossCBR", type=str, help="which model to use, options: CrossCBR")
     parser.add_argument("-i", "--info", default="", type=str, help="any auxilary info that will be appended to the log file name")
+    parser.add_argument("-w1", "--weightovl", default="1", type=float, help="weight of ovl edges")
+    parser.add_argument("-w2", "--weightnonovl", default="1", type=float, help="weight of non ovl edges")
+    parser.add_argument("-w3", "--UIweight", default="0.5", type=float)
+    parser.add_argument("-w4", "--BIweight", default="0.5", type=float)
+    parser.add_argument("-sw", "--sweight", default="0", type=float, help="self weight in i-i matrix")
+    parser.add_argument("-nw", "--nbweight", default="1", type=float, help="all neighbors (aggregated) weight")
+
     args = parser.parse_args()
 
     return args
@@ -52,6 +59,12 @@ def main():
     conf["num_users"] = dataset.num_users
     conf["num_bundles"] = dataset.num_bundles
     conf["num_items"] = dataset.num_items
+    conf["w1"] = paras["weightovl"]
+    conf["w2"] = paras["weightnonovl"]
+    conf["w3"] = paras["UIweight"]
+    conf["w4"] = paras["BIweight"]
+    conf["sw"] = paras["sweight"]
+    conf["nw"] = paras["nbweight"]
 
     os.environ['CUDA_VISIBLE_DEVICES'] = conf["gpu"]
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -106,6 +119,10 @@ def main():
         run_path = run_path + "/" + setting
         checkpoint_model_path = checkpoint_model_path + "/" + setting
         checkpoint_conf_path = checkpoint_conf_path + "/" + setting
+
+        log = open(log_path, "a")
+        log.write(str(conf) + "\n")
+        log.close()
             
         run = SummaryWriter(run_path)
 
@@ -118,7 +135,6 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=conf["l2_reg"])
 
         batch_cnt = len(dataset.train_loader)
-        test_interval_bs = int(batch_cnt * conf["test_interval"])
         ed_interval_bs = int(batch_cnt * conf["ed_interval"])
 
         best_metrics, best_perform = init_best_metrics(conf)
@@ -203,7 +219,7 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
 
     log = open(log_path, "a")
 
-    topk_ = 20
+    topk_ = conf["topk_valid"]
     print("top%d as the final evaluation standard" %(topk_))
     if metrics["val"]["recall"][topk_] > best_metrics["val"]["recall"][topk_] and metrics["val"]["ndcg"][topk_] > best_metrics["val"]["ndcg"][topk_]:
         torch.save(model.state_dict(), checkpoint_model_path)
@@ -223,6 +239,9 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
             print(best_perform["test"][topk])
             log.write(best_perform["val"][topk] + "\n")
             log.write(best_perform["test"][topk] + "\n")
+        
+        print("saving asym matrix...")
+        model.save_asym()
 
     log.close()
 
