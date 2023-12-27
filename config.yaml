@@ -2,7 +2,7 @@ Youshu:
   data_path: './datasets'
   batch_size_train: 2048 # the batch size for training
   batch_size_test: 2048 # the batch size for testing
-  topk: [10, 20, 40, 80] # the topks metrics for evaluation
+  topk: [5, 10, 20, 40, 80] # the topks metrics for evaluation
   neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
   aug_type: "ED" # options: ED, MD, OP
   ed_interval: 1 # by how many epochs to dropout edge, default is 1
@@ -33,7 +33,7 @@ NetEase:
   data_path: './datasets'
   batch_size_train: 2048
   batch_size_test: 2048
-  topk: [10, 20, 40, 80]
+  topk: [5, 10, 20, 40, 80]
   neg_num: 1
   aug_type: "ED"
   ed_interval: 1
@@ -65,7 +65,7 @@ iFashion:
   data_path: './datasets'
   batch_size_train: 12000
   batch_size_test: 2048
-  topk: [10, 20, 40, 80]
+  topk: [5, 10, 20, 40, 80]
   neg_num: 1
   aug_type: "ED"
   ed_interval: 1
@@ -111,7 +111,7 @@ Steam:
   self_loop: False
   c_lambdas: [0.25]
   c_temps: [0.2]
-  epochs: 100
+  epochs: 30
   topk_valid: 20
   UI_layers: [0.7, 0.3]
   seed: 2023
