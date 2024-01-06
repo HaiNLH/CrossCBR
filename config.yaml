@@ -58,9 +58,9 @@ NetEase:
   file_type: ".txt"
   topk_valid: 20
   nhead: 2
-  # contrast_weight: [0.5, 0.5, 0.0, 0.0]
+  contrast_weight: [0.5, 0.5, 0.0, 0.0]
   # contrast_weight: [0.3, 0.3, 0.2, 0.2]
-  contrast_weight: [0, 0, 0.5, 0.5]
+  # contrast_weight: [0, 0, 0.5, 0.5]
   extra_layer: True
 
 
