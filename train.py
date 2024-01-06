@@ -20,7 +20,7 @@ import numpy as np
 def get_cmd():
     parser = argparse.ArgumentParser()
     # experimental settings
-    parser.add_argument("-g", "--gpu", default="0", type=str, help="which gpu to use")
+    parser.add_argument("-g", "--gpu", default="5", type=str, help="which gpu to use")
     parser.add_argument("-d", "--dataset", default="Youshu", type=str, help="which dataset to use, options: NetEase, Youshu, iFashion")
     parser.add_argument("-m", "--model", default="CrossCBR", type=str, help="which model to use, options: CrossCBR")
     parser.add_argument("-i", "--info", default="", type=str, help="any auxilary info that will be appended to the log file name")
@@ -240,9 +240,6 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
             log.write(best_perform["val"][topk] + "\n")
             log.write(best_perform["test"][topk] + "\n")
         
-        print("saving asym matrix...")
-        model.save_asym()
-
     log.close()
 
     return best_metrics, best_perform, best_epoch
